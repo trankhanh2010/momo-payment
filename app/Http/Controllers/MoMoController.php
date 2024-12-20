@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
-use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
-
+use Endroid\QrCode\Builder\Builder;
 class MoMoController extends Controller
 {
     public function createQrCode()
@@ -57,7 +56,16 @@ class MoMoController extends Controller
                 $payUrl = $body['payUrl']; // Lấy URL thanh toán
                 $deeplink = $body['deeplink']; // Lấy deeplink
     
-                return view('qrcode', compact('qrCodeUrl', 'payUrl', 'deeplink'));
+                 // Tạo mã QR
+                 $qrCode = Builder::create()
+                 ->data($qrCodeUrl)
+                 ->size(300)
+                 ->build();
+
+             // Lưu QR code vào file hoặc base64
+             $qrCodeImage = $qrCode->getDataUri();
+
+             return view('qrcode', compact('qrCodeImage', 'payUrl', 'deeplink'));
             }
     
             return response()->json(['error' => 'Không tạo được mã QR'], 400);
