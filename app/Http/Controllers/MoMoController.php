@@ -26,9 +26,9 @@ class MoMoController extends Controller
         $amount = '10000'; // Số tiền (VND)
         $orderInfo = 'Thanh toán đơn hàng #12345';
         $extraData = ''; // Thông tin thêm, có thể để trống
-
+        $requestType = 'captureWallet'; //Hình thức thanh toán
         // Tạo chữ ký (signature)
-        $rawSignature = "accessKey=$accessKey&amount=$amount&extraData=$extraData&ipnUrl=$notifyUrl&orderId=$orderId&orderInfo=$orderInfo&partnerCode=$partnerCode&redirectUrl=$returnUrl&requestId=$requestId&requestType=captureWallet";
+        $rawSignature = "accessKey=$accessKey&amount=$amount&extraData=$extraData&ipnUrl=$notifyUrl&orderId=$orderId&orderInfo=$orderInfo&partnerCode=$partnerCode&redirectUrl=$returnUrl&requestId=$requestId&requestType=$requestType";
         $signature = hash_hmac('sha256', $rawSignature, $secretKey);
 
         // Tạo dữ liệu gửi đến API MoMo
@@ -42,7 +42,7 @@ class MoMoController extends Controller
             'redirectUrl' => $returnUrl,
             'ipnUrl' => $notifyUrl,
             'extraData' => $extraData,
-            'requestType' => 'captureWallet',
+            'requestType' => $requestType,
             'signature' => $signature,
         ];
         dump($orderId);
@@ -51,12 +51,12 @@ class MoMoController extends Controller
             $client = new Client();
             $response = $client->post($endpoint, ['json' => $data]);
             $body = json_decode($response->getBody(), true); // Chuyển kết quả thành mảng
+            dump($body);
             // Kiểm tra nếu có URL QR code
             if (isset($body['qrCodeUrl'])) {
                 $qrCodeUrl = $body['qrCodeUrl']; // Lấy URL mã QR
                 $payUrl = $body['payUrl']; // Lấy URL thanh toán
                 $deeplink = $body['deeplink']; // Lấy deeplink
-
                 // Tạo mã QR
                 $qrCode = Builder::create()
                     ->data($qrCodeUrl)
